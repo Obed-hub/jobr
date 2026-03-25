@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user information, skills, and job preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "displayName": { "type": "string", "description": "User's full name" },
+        "email": { "type": "string", "format": "email", "description": "User's email" },
+        "photoURL": { "type": "string", "description": "User's profile picture URL" },
+        "bio": { "type": "string", "description": "Short user bio" },
+        "skills": { "type": "array", "items": { "type": "string" }, "description": "List of user skills" },
+        "desiredJobTitles": { "type": "array", "items": { "type": "string" } },
+        "resumeUrl": { "type": "string", "description": "URL to uploaded resume" },
+        "resumeName": { "type": "string" },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "jobTypes": { "type": "array", "items": { "type": "string" } },
+            "locations": { "type": "array", "items": { "type": "string" } },
+            "minSalary": { "type": "number" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "WorkExperience": {
+      "title": "Work Experience",
+      "type": "object",
+      "properties": {
+        "company": { "type": "string" },
+        "position": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "description": { "type": "string" },
+        "current": { "type": "boolean" }
+      }
+    },
+    "JobAlert": {
+      "title": "Job Alert",
+      "type": "object",
+      "properties": {
+        "keywords": { "type": "string" },
+        "location": { "type": "string" },
+        "jobType": { "type": "string" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Application": {
+      "title": "Job Application",
+      "type": "object",
+      "properties": {
+        "jobId": { "type": "string" },
+        "jobTitle": { "type": "string" },
+        "company": { "type": "string" },
+        "status": { "type": "string", "enum": ["applied", "interviewing", "offered", "rejected"] },
+        "appliedAt": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      }
+    },
+    "SavedJob": {
+      "title": "Saved Job",
+      "description": "A job listing saved by a user.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Owner's UID" },
+        "jobId": { "type": "string", "description": "External job ID" },
+        "title": { "type": "string" },
+        "company": { "type": "string" },
+        "url": { "type": "string" },
+        "logo": { "type": "string" },
+        "platform": { "type": "string" },
+        "savedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "jobId", "title", "url"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/users/{uid}/savedJobs/{jobId}": {
+      "schema": "SavedJob",
+      "description": "User's saved job listings"
+    },
+    "/users/{uid}/experience/{expId}": {
+      "schema": "WorkExperience",
+      "description": "User's work history"
+    },
+    "/users/{uid}/alerts/{alertId}": {
+      "schema": "JobAlert",
+      "description": "User's job alerts"
+    },
+    "/users/{uid}/applications/{appId}": {
+      "schema": "Application",
+      "description": "User's job applications"
+    }
+  }
+}

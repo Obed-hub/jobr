@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required) - Firebase Auth UID
+    //   - displayName: string (optional)
+    //   - email: string (required) - User's email
+    //   - photoURL: string (optional)
+    //   - bio: string (optional, max 500 chars)
+    //   - skills: list (optional, max 50 items)
+    //   - preferences: map (optional)
+    //   - createdAt: timestamp (required, immutable)
+    //   - updatedAt: timestamp (required)
+    //
+    // Collection: users/{uid}/savedJobs
+    // Document ID: {jobId}
+    // Fields:
+    //   - uid: string (required) - Owner's UID
+    //   - jobId: string (required)
+    //   - title: string (required, max 200 chars)
+    //   - company: string (optional, max 100 chars)
+    //   - url: string (required, valid URL)
+    //   - logo: string (optional)
+    //   - platform: string (optional)
+    //   - savedAt: timestamp (required, immutable)
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt', 'updatedAt']) &&
+             data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
+             (!('skills' in data) || (data.skills is list && data.skills.size() <= 50)) &&
+             (!('desiredJobTitles' in data) || (data.desiredJobTitles is list && data.desiredJobTitles.size() <= 10)) &&
+             (!('resumeUrl' in data) || isValidUrl(data.resumeUrl));
+    }
+
+    function isValidSavedJob(data) {
+      return data.keys().hasAll(['uid', 'jobId', 'title', 'url', 'savedAt']) &&
+             data.uid == request.auth.uid &&
+             data.title is string && data.title.size() <= 200 &&
+             isValidUrl(data.url);
+    }
+
+    function isValidExperience(data) {
+      return data.keys().hasAll(['company', 'position', 'startDate']) &&
+             data.company is string && data.company.size() <= 100 &&
+             data.position is string && data.position.size() <= 100;
+    }
+
+    function isValidAlert(data) {
+      return data.keys().hasAll(['keywords', 'active', 'createdAt']) &&
+             data.keywords is string && data.keywords.size() <= 100;
+    }
+
+    function isValidApplication(data) {
+      return data.keys().hasAll(['jobId', 'jobTitle', 'company', 'status', 'appliedAt']) &&
+             data.status in ['applied', 'interviewing', 'offered', 'rejected'];
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) && isValidUser(request.resource.data);
+      allow update: if isOwner(uid) && isValidUser(request.resource.data) && 
+                      request.resource.data.createdAt == resource.data.createdAt;
+      
+      match /savedJobs/{jobId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidSavedJob(request.resource.data);
+        allow delete: if isOwner(uid);
+      }
+
+      match /experience/{expId} {
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isValidExperience(request.resource.data);
+        allow delete: if isOwner(uid);
+      }
+
+      match /alerts/{alertId} {
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isValidAlert(request.resource.data);
+        allow delete: if isOwner(uid);
+      }
+
+      match /applications/{appId} {
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isValidApplication(request.resource.data);
+        allow delete: if isOwner(uid);
+      }
+    }
+  }
+}
