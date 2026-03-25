@@ -28,4 +28,14 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(20, 184, 166, 0.4);
   }
+
+  .markdown-body h1 { @apply text-2xl font-bold mt-6 mb-4; }
+  .markdown-body h2 { @apply text-xl font-bold mt-5 mb-3; }
+  .markdown-body h3 { @apply text-lg font-bold mt-4 mb-2; }
+  .markdown-body p { @apply mb-4 leading-relaxed; }
+  .markdown-body ul { @apply list-disc pl-6 mb-4; }
+  .markdown-body ol { @apply list-decimal pl-6 mb-4; }
+  .markdown-body li { @apply mb-1; }
+  .markdown-body a { @apply text-teal-600 hover:underline; }
+  .markdown-body strong { @apply font-bold; }
 }

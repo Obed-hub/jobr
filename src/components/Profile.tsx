@@ -52,21 +52,18 @@ export function Profile() {
     if (!user) return;
     setSaving(true);
     try {
-      const profileData = {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName || '',
-        photoURL: user.photoURL || '',
+      const profileData: any = {
         bio,
         skills: skills.split(',').map(s => s.trim()).filter(Boolean),
         desiredJobTitles: jobTitles.split(',').map(s => s.trim()).filter(Boolean),
         updatedAt: serverTimestamp(),
-        createdAt: profile?.createdAt || serverTimestamp()
       };
-      await setDoc(doc(db, 'users', user.uid), profileData, { merge: true });
+      
+      await updateDoc(doc(db, 'users', user.uid), profileData);
       alert('Profile updated successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving profile:', error);
+      alert(`Error saving profile: ${error.message || 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
@@ -76,22 +73,41 @@ export function Profile() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    // Basic size check (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size too large. Please upload a file smaller than 5MB.');
+      return;
+    }
+
     setUploading(true);
     try {
-      const storageRef = ref(storage, `resumes/${user.uid}/${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const formData = new FormData();
+      formData.append('resume', file);
+      formData.append('userId', user.uid);
+
+      const response = await fetch('/api/upload-resume', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload resume');
+      }
+
+      const { url, name } = await response.json();
       
-      await setDoc(doc(db, 'users', user.uid), {
+      await updateDoc(doc(db, 'users', user.uid), {
         resumeUrl: url,
-        resumeName: file.name,
+        resumeName: name,
         updatedAt: serverTimestamp()
-      }, { merge: true });
+      });
       
-      setProfile(prev => prev ? { ...prev, resumeUrl: url, resumeName: file.name } : null);
+      setProfile(prev => prev ? { ...prev, resumeUrl: url, resumeName: name } : null);
       alert('Resume uploaded successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading resume:', error);
+      alert(`Error uploading resume: ${error.message || 'Unknown error'}.`);
     } finally {
       setUploading(false);
     }

@@ -54,7 +54,7 @@ service cloud.firestore {
              (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
              (!('skills' in data) || (data.skills is list && data.skills.size() <= 50)) &&
              (!('desiredJobTitles' in data) || (data.desiredJobTitles is list && data.desiredJobTitles.size() <= 10)) &&
-             (!('resumeUrl' in data) || isValidUrl(data.resumeUrl));
+             (!('resumeUrl' in data) || data.resumeUrl == "" || isValidUrl(data.resumeUrl));
     }
 
     function isValidSavedJob(data) {

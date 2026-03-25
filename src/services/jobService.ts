@@ -2,7 +2,7 @@ import { Job } from '../types';
 
 export async function fetchRemotiveJobs(category?: string, search?: string): Promise<Job[]> {
   try {
-    const url = new URL('https://remotive.com/api/remote-jobs');
+    const url = new URL('/api/jobs/remotive', window.location.origin);
     if (category) url.searchParams.append('category', category);
     if (search) url.searchParams.append('search', search);
 
@@ -32,7 +32,7 @@ export async function fetchRemotiveJobs(category?: string, search?: string): Pro
 
 export async function fetchArbeitnowJobs(page: number = 1): Promise<Job[]> {
   try {
-    const response = await fetch(`https://www.arbeitnow.com/api/job-board-api?page=${page}`);
+    const response = await fetch(`/api/jobs/arbeitnow?page=${page}`);
     if (!response.ok) throw new Error('Arbeitnow API error');
     const data = await response.json();
 
@@ -55,9 +55,7 @@ export async function fetchArbeitnowJobs(page: number = 1): Promise<Job[]> {
 
 export async function fetchRemoteOKJobs(): Promise<Job[]> {
   try {
-    // RemoteOK API often requires a user-agent or has CORS issues in browser
-    // We'll try fetching it, but it might fail in client-side only environments
-    const response = await fetch('https://remoteok.com/api');
+    const response = await fetch('/api/jobs/remoteok');
     if (!response.ok) throw new Error('RemoteOK API error');
     const data = await response.json();
 

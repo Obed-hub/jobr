@@ -1,10 +1,11 @@
 import React from 'react';
+import { NavLink, Link } from 'react-router-dom';
 import { auth, signInWithGoogle, logout } from '../firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { Briefcase, LogIn, LogOut, User } from 'lucide-react';
+import { Briefcase, LogIn, LogOut } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export function Navbar({ activeView, setView }: { activeView: string, setView: (v: string) => void }) {
+export function Navbar() {
   const [user] = useAuthState(auth);
   const [isLoggingIn, setIsLoggingIn] = React.useState(false);
 
@@ -27,37 +28,39 @@ export function Navbar({ activeView, setView }: { activeView: string, setView: (
   };
 
   const navItems = [
-    { id: 'home', label: 'Home' },
-    { id: 'find-job', label: 'Find Job' },
-    { id: 'matchmaker', label: 'Matchmaker' },
-    { id: 'profile', label: 'Profile' },
-    { id: 'alerts', label: 'Alerts' },
-    { id: 'apps', label: 'Apps' },
+    { path: '/', label: 'Home' },
+    { path: '/find-job', label: 'Find Job' },
+    { path: '/matchmaker', label: 'Matchmaker' },
+    { path: '/profile', label: 'Profile', protected: true },
+    { path: '/alerts', label: 'Alerts', protected: true },
+    { path: '/apps', label: 'Apps', protected: true },
   ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView('home')}>
+          <Link to="/" className="flex items-center gap-2 cursor-pointer">
             <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
               <Briefcase className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold tracking-tight">_HIRE.io</span>
-          </div>
+          </Link>
 
           <div className="hidden md:flex items-center gap-6">
             {navItems.map((item) => (
-              <button 
-                key={item.id}
-                onClick={() => setView(item.id)}
-                className={cn(
-                  "text-sm font-medium transition-colors",
-                  activeView === item.id ? "text-black" : "text-gray-400 hover:text-black"
-                )}
-              >
-                {item.label}
-              </button>
+              (!item.protected || user) && (
+                <NavLink 
+                  key={item.path}
+                  to={item.path}
+                  className={({ isActive }) => cn(
+                    "text-sm font-medium transition-colors",
+                    isActive ? "text-black" : "text-gray-400 hover:text-black"
+                  )}
+                >
+                  {item.label}
+                </NavLink>
+              )
             ))}
           </div>
 

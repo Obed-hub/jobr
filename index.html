@@ -4,6 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Google AI Studio App</title>
+    <script>
+      // Fix for protobufjs/node-fetch trying to overwrite fetch in some environments
+      (function() {
+        const originalFetch = window.fetch;
+        try {
+          Object.defineProperty(window, 'fetch', {
+            get: function() { return originalFetch; },
+            set: function(v) { console.warn('Attempted to overwrite window.fetch'); },
+            configurable: true
+          });
+        } catch (e) {
+          console.error('Failed to protect window.fetch', e);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

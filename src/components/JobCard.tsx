@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Job } from '../types';
-import { ExternalLink, MapPin, DollarSign, Clock, Bookmark, Share2 } from 'lucide-react';
+import { ExternalLink, MapPin, DollarSign, Clock, Bookmark, Share2, Info } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '../lib/utils';
+import { Link } from 'react-router-dom';
+import { ShareModal } from './ShareModal';
 
 interface JobCardProps {
   job: Job;
@@ -13,6 +15,8 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, isSaved, onSave, matchScore, matchReasoning }: JobCardProps) {
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
   return (
     <div className="group relative bg-white border border-gray-100 rounded-3xl p-6 hover:shadow-xl hover:border-amber-200 transition-all duration-300">
       {matchScore && (
@@ -38,11 +42,19 @@ export function JobCard({ job, isSaved, onSave, matchScore, matchReasoning }: Jo
         </div>
         <div className="flex gap-2">
           <button 
+            onClick={() => setIsShareModalOpen(true)}
+            className="p-2 bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-black rounded-xl transition-all"
+            title="Share Job"
+          >
+            <Share2 className="w-5 h-5" />
+          </button>
+          <button 
             onClick={() => onSave?.(job)}
             className={cn(
               "p-2 rounded-xl transition-all",
               isSaved ? "bg-amber-100 text-amber-600" : "bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-black"
             )}
+            title={isSaved ? "Unsave Job" : "Save Job"}
           >
             <Bookmark className={cn("w-5 h-5", isSaved && "fill-current")} />
           </button>
@@ -86,15 +98,31 @@ export function JobCard({ job, isSaved, onSave, matchScore, matchReasoning }: Jo
         ))}
       </div>
 
-      <a 
-        href={job.url} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full py-3 bg-black text-white rounded-2xl font-bold text-sm hover:bg-gray-800 transition-all active:scale-95"
-      >
-        View Details
-        <ExternalLink className="w-4 h-4" />
-      </a>
+      <div className="flex gap-3">
+        <Link 
+          to={`/job/${job.id}`}
+          className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-200 text-black rounded-2xl font-bold text-sm hover:bg-amber-300 transition-all active:scale-95"
+        >
+          More Detail
+          <Info className="w-4 h-4" />
+        </Link>
+        <a 
+          href={job.url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="p-3 bg-black text-white rounded-2xl font-bold text-sm hover:bg-gray-800 transition-all active:scale-95"
+          title="Apply on Platform"
+        >
+          <ExternalLink className="w-5 h-5" />
+        </a>
+      </div>
+
+      <ShareModal 
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        url={`${window.location.origin}/job/${job.id}`}
+        title={`Check out this job: ${job.title} at ${job.company}`}
+      />
     </div>
   );
 }

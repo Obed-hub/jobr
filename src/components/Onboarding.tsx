@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, storage } from '../firebase';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Loader2, Upload, CheckCircle2, ArrowRight, Sparkles, Briefcase, User } from 'lucide-react';
 import { UserProfile } from '../types';
@@ -30,14 +30,27 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
     setUploading(true);
     try {
-      const storageRef = ref(storage, `resumes/${user.uid}/${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const formData = new FormData();
+      formData.append('resume', file);
+      formData.append('userId', user.uid);
+
+      const response = await fetch('/api/upload-resume', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload resume');
+      }
+
+      const { url, name } = await response.json();
       setResumeUrl(url);
-      setResumeName(file.name);
+      setResumeName(name);
       setStep(2);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading resume:', error);
+      alert(`Error uploading resume: ${error.message || 'Unknown error'}.`);
     } finally {
       setUploading(false);
     }
@@ -47,7 +60,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     if (!user) return;
     setLoading(true);
     try {
-      const profileData: Partial<UserProfile> = {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      const profileData: any = {
         uid: user.uid,
         email: user.email || '',
         displayName: user.displayName || '',
@@ -55,21 +71,24 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         bio,
         skills: skills.split(',').map(s => s.trim()).filter(Boolean),
         desiredJobTitles: jobTitles.split(',').map(s => s.trim()).filter(Boolean),
-        resumeUrl,
-        resumeName,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
       };
 
-      await setDoc(doc(db, 'users', user.uid), {
-        ...profileData,
-        updatedAt: serverTimestamp(),
-        createdAt: serverTimestamp()
-      }, { merge: true });
+      if (!userDoc.exists()) {
+        profileData.createdAt = serverTimestamp();
+      }
+
+      if (resumeUrl) {
+        profileData.resumeUrl = resumeUrl;
+        profileData.resumeName = resumeName;
+      }
+
+      await setDoc(userDocRef, profileData, { merge: true });
 
       onComplete();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving profile:', error);
+      alert(`Error saving profile: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }

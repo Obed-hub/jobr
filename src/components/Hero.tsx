@@ -1,8 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowUpRight, Star, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function Hero() {
+  const navigate = useNavigate();
+
   return (
     <section id="home" className="pt-32 pb-20 px-4 overflow-hidden">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
@@ -26,13 +29,13 @@ export function Hero() {
           
           <div className="flex flex-wrap gap-4">
             <button 
-              onClick={() => document.getElementById('find-job')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => navigate('/find-job')}
               className="bg-amber-200 text-black px-8 py-4 rounded-xl font-semibold hover:bg-amber-300 transition-all active:scale-95"
             >
               Find Jobs
             </button>
             <button 
-              onClick={() => document.getElementById('matchmaker')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => navigate('/matchmaker')}
               className="border border-gray-200 text-black px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-all active:scale-95"
             >
               AI Matchmaker
